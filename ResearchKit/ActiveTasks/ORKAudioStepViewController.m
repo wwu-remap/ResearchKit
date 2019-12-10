@@ -48,7 +48,7 @@
 @import AVFoundation;
 
 
-@interface ORKAudioStepViewController ()
+@interface ORKAudioStepViewController () <ORKAudioContentViewDelegate>
 
 @property (nonatomic, strong) AVAudioRecorder *avAudioRecorder;
 
@@ -83,6 +83,8 @@
     // Do any additional setup after loading the view.
     _audioContentView = [ORKAudioContentView new];
     _audioContentView.timeLeft = self.audioStep.stepDuration;
+
+    _audioContentView.delegate = self;
 
     if (self.alertThreshold > 0) {
         _audioContentView.alertThreshold = self.alertThreshold;
@@ -134,6 +136,10 @@
             if (finished) {
                 [strongSelf finish];
             }
+            if (timer.runtime > 45) {
+                [_audioContentView enableFinishButton];
+            }
+
         }];
         [_timer resume];
     }
@@ -186,6 +192,10 @@
     [super recorder:recorder didFailWithError:error];
     _audioRecorderError = error;
     _audioContentView.failed = YES;
+}
+
+- (void)audioContentViewDidFinish:(ORKAudioContentView *)view {
+    [self finish];
 }
 
 @end

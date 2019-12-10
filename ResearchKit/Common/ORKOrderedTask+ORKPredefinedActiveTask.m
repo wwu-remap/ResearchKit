@@ -606,7 +606,7 @@ NSString *const ORKAudioTooLoudStepIdentifier = @"audio.tooloud";
 
     {
         ORKCountdownStep *step = [[ORKCountdownStep alloc] initWithIdentifier:ORKCountdownStepIdentifier];
-        step.stepDuration = 5.0;
+        step.stepDuration = 3.0;
         step.title = ORKLocalizedString(@"AUDIO_TASK_TITLE", nil);
 
         // Collect audio during the countdown step too, to provide a baseline.

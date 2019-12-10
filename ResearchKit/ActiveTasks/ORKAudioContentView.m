@@ -34,6 +34,7 @@
 
 #import "ORKHeadlineLabel.h"
 #import "ORKLabel.h"
+#import "ORKContinueButton.h"
 
 #import "ORKAccessibility.h"
 #import "ORKHelpers_Internal.h"
@@ -63,6 +64,7 @@ static const CGFloat GraphViewRedZoneHeight = 25;
 
 @interface ORKAudioContentView ()
 
+@property (nonatomic, strong) ORKContinueButton *finishButton;
 @property (nonatomic, strong) ORKHeadlineLabel *alertLabel;
 @property (nonatomic, strong) UILabel *timerLabel;
 @property (nonatomic, strong) ORKAudioGraphView *graphView;
@@ -80,6 +82,10 @@ static const CGFloat GraphViewRedZoneHeight = 25;
     if (self) {
         self.layoutMargins = ORKStandardFullScreenLayoutMarginsForView(self);
         
+        _finishButton = [[ORKContinueButton alloc] initWithTitle:@"" isDoneButton:NO];
+        _finishButton.translatesAutoresizingMaskIntoConstraints = NO;
+        [_finishButton addTarget:self action:@selector(finishAudioRecording) forControlEvents:UIControlEventTouchUpInside];
+
         self.alertLabel = [ORKHeadlineLabel new];
         _alertLabel.translatesAutoresizingMaskIntoConstraints = NO;
         self.timerLabel = [ORKAudioTimerLabel new];
@@ -91,10 +97,14 @@ static const CGFloat GraphViewRedZoneHeight = 25;
         
         self.alertColor = [UIColor ork_redColor];
         
+        [self addSubview:_finishButton];
         [self addSubview:_alertLabel];
         [self addSubview:_timerLabel];
         [self addSubview:_graphView];
         
+        [_finishButton setTitle:@"Fertig" forState:UIControlStateNormal];
+        _finishButton.enabled = NO;
+
         _alertLabel.text = ORKLocalizedString(@"AUDIO_TOO_LOUD_LABEL", nil);
         // _timerLabel.text set in -updateTimerLabel:
         
@@ -105,6 +115,14 @@ static const CGFloat GraphViewRedZoneHeight = 25;
         [self setUpConstraints];
     }
     return self;
+}
+
+- (void)enableFinishButton {
+    self.finishButton.enabled = YES;
+}
+
+- (void)finishAudioRecording {
+    [self.delegate audioContentViewDidFinish:self];
 }
 
 - (void)tintColorDidChange {
@@ -146,8 +164,8 @@ static const CGFloat GraphViewRedZoneHeight = 25;
 - (void)setUpConstraints {
     NSMutableArray *constraints = [NSMutableArray array];
     
-    NSDictionary *views = NSDictionaryOfVariableBindings(_timerLabel, _alertLabel, _graphView);
-    [constraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_graphView]-[_alertLabel]|"
+    NSDictionary *views = NSDictionaryOfVariableBindings(_timerLabel, _alertLabel, _graphView, _finishButton);
+    [constraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_graphView]-[_alertLabel]-[_finishButton]|"
                                                                              options:(NSLayoutFormatOptions)0
                                                                              metrics:nil
                                                                                views:views]];
@@ -158,6 +176,21 @@ static const CGFloat GraphViewRedZoneHeight = 25;
                                                         attribute:NSLayoutAttributeCenterX
                                                        multiplier:1.0
                                                          constant:0.0]];
+    
+    [constraints addObject:[NSLayoutConstraint constraintWithItem:_finishButton
+                                                        attribute:NSLayoutAttributeCenterX
+                                                        relatedBy:NSLayoutRelationEqual
+                                                           toItem:self
+                                                        attribute:NSLayoutAttributeCenterX
+                                                       multiplier:1.0
+                                                         constant:0.0]];
+    
+    [constraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_finishButton]|"
+                                                                             options:(NSLayoutFormatOptions)0
+                                                                             metrics:nil
+                                                                               views:views]];
+
+
     
     const CGFloat sideMargin = self.layoutMargins.left + (2 * ORKStandardLeftMarginForTableViewCell(self));
     const CGFloat innerMargin = 2;

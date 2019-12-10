@@ -35,7 +35,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class ORKAudioContentView;
+@protocol ORKAudioContentViewDelegate <NSObject>
+@optional
+- (void)audioContentViewDidFinish:(ORKAudioContentView *)view;
+@end
+
 @interface ORKAudioContentView : ORKActiveStepCustomView
+
+@property (nonatomic, weak, nullable) id<ORKAudioContentViewDelegate> delegate;
 
 @property (nonatomic, copy, nullable) UIColor *keyColor;
 @property (nonatomic, copy, nullable) UIColor *alertColor;
@@ -51,6 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
 // Samples should be in the range of (0, 1).
 - (void)addSample:(NSNumber *)sample;
 - (void)removeAllSamples;
+
+- (void)enableFinishButton;
 
 @end
 
