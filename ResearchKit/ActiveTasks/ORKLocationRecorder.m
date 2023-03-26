@@ -71,8 +71,13 @@
     return @"location";
 }
 
+
+// Test Seam - unit tests don't support background updates or pausing.
 - (CLLocationManager *)createLocationManager {
-    return [[CLLocationManager alloc] init];
+    CLLocationManager *manager = [[CLLocationManager alloc] init];
+    manager.pausesLocationUpdatesAutomatically = NO;
+    manager.allowsBackgroundLocationUpdates = YES;
+    return manager;
 }
 
 - (void)start {
@@ -88,21 +93,19 @@
     }
     
     self.locationManager = [self createLocationManager];
-
-    if (self.locationManager.authorizationStatus == kCLAuthorizationStatusRestricted || self.locationManager.authorizationStatus == kCLAuthorizationStatusNotDetermined) {
+    
+    CLAuthorizationStatus status = kCLAuthorizationStatusNotDetermined;
+    
+    if (@available(iOS 14.0, *)) {
+        status = self.locationManager.authorizationStatus;
+    } else {
+        status = [CLLocationManager authorizationStatus];
+    }
+    
+    if (status == kCLAuthorizationStatusRestricted || status == kCLAuthorizationStatusNotDetermined) {
         [self.locationManager requestWhenInUseAuthorization];
     }
-    self.locationManager.pausesLocationUpdatesAutomatically = NO;
-    self.locationManager.delegate = self;
-    
-    if (!self.locationManager) {
-        NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain
-                                             code:NSFeatureUnsupportedError
-                                         userInfo:@{@"recorder": self}];
-        [self finishRecordingWithError:error];
-        return;
-    }
-    
+
     self.uptime = [NSProcessInfo processInfo].systemUptime;
     [self.locationManager startUpdatingLocation];
 }
@@ -130,7 +133,8 @@
 }
 
 - (void)locationManager:(CLLocationManager *)manager
-     didUpdateLocations:(NSArray *)locations {
+     didUpdateLocations:(NSArray<CLLocation *> *)locations {
+
     BOOL success = YES;
     NSParameterAssert(locations.count >= 0);
     NSError *error = nil;
@@ -157,8 +161,15 @@
 }
 
 - (BOOL)isRecording {
+    CLAuthorizationStatus status = kCLAuthorizationStatusNotDetermined;
     
-    return [CLLocationManager locationServicesEnabled] && (self.locationManager != nil) && (self.locationManager.authorizationStatus > kCLAuthorizationStatusDenied);
+    if (@available(iOS 14.0, *)) {
+        status = self.locationManager.authorizationStatus;
+    } else {
+        status = [CLLocationManager authorizationStatus];
+    }
+    
+    return [CLLocationManager locationServicesEnabled] && (self.locationManager != nil) && (status > kCLAuthorizationStatusDenied);
 }
 
 - (void)reset {
