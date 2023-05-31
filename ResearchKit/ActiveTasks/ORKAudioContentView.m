@@ -131,7 +131,7 @@ static const CGFloat ORKAudioStepContentRecordButtonVerticalSpacing = 20.0;
 }
 
 - (void)finishAudioRecording {
-    [self.delegate audioContentViewDidFinish:self];
+    [self invokeViewEventHandlerWithEvent:ORKAudioContentViewEventStopRecording];
 }
 
 - (void)tintColorDidChange {
@@ -302,6 +302,10 @@ static const CGFloat ORKAudioStepContentRecordButtonVerticalSpacing = 20.0;
         formatter.zeroFormattingBehavior = NSDateComponentsFormatterZeroFormattingBehaviorPad;
         formatter.allowedUnits = NSCalendarUnitMinute | NSCalendarUnitSecond;
     });
+    
+    if (_timeLeft < 120) {
+        [self enableFinishButton];
+    }
     
     NSString *string = [formatter stringFromTimeInterval:MAX(round(_timeLeft),0)];
     _timerLabel.text = string;
